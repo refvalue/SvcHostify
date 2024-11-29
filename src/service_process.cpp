@@ -44,7 +44,6 @@
 #define NOMINMAX
 #define NOGDI
 
-
 #include <Windows.h>
 
 namespace essence::win {
