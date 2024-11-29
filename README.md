@@ -72,7 +72,7 @@ The hosting service reads a JSON file for its internal configuration and the key
 | Field Name | Type     | Description                                                  | Possible Values                | Default            | Required |
 | ---------- | -------- | ------------------------------------------------------------ | ------------------------------ | ------------------ | -------- |
 | `basePath` | `string` | The base path of the logging file.                           | Any valid directory path       | log/svchostify.log | Yes      |
-| `maxSize`  | `string` | The maximum size of one single log file. The pattern is `\d+\s*(KiB|MiB|GiB|TiB)?`. | Any valid values like `10 MiB` | 50 MiB             | No       |
+| `maxSize`  | `string` | The maximum size of one single log file. The pattern is `\\d+\\s*(KiB|MiB|GiB|TiB)?`. | Any valid values like `10 MiB` | 50 MiB             | No       |
 | `maxFiles` | `number` | The maximum count of log files.                              | Any positive integer           | 5                  | No       |
 
 **Note: The complete JSON schema can be found [here](svchostify.schema.json).**
