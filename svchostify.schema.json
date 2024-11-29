@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "workType": {
+      "type": "string",
+      "enum": [
+        "com",
+        "pure_c",
+        "jvm",
+        "executable"
+      ],
+      "description": "The type of the service"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the service"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "The display name of the service"
+    },
+    "context": {
+      "type": "string",
+      "description": "Arbitrary content according to the work type: a coclass {GUID} for 'com', a DLL path for 'pure_c', a CLASSPATH for 'jvm', an EXE path for 'executable'"
+    },
+    "accountType": {
+      "type": "string",
+      "enum": [
+        "localSystem",
+        "networkService",
+        "localService"
+      ],
+      "description": "The account type under which the service runs"
+    },
+    "postQuitMessage": {
+      "type": "boolean",
+      "description": "Indicates whether to post a quit message before the service exits when the type is 'executable'",
+      "optional": true
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the service",
+      "optional": true
+    },
+    "jdkDirectory": {
+      "type": "string",
+      "description": "The JDK Directory",
+      "optional": true
+    },
+    "workingDirectory": {
+      "type": "string",
+      "description": "The initial working directory",
+      "optional": true
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The startup arguments for the service",
+      "optional": true
+    },
+    "dllDirectories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional directories for loading DLLs",
+      "optional": true
+    },
+    "logger": {
+      "type": "object",
+      "properties": {
+        "basePath": {
+          "type": "string",
+          "description": "The base path of the logging file"
+        },
+        "maxSize": {
+          "type": "string",
+          "description": "The maximum size of one single log file",
+          "pattern": "^[0-9]+\\s*(KiB|MiB|GiB|TiB)?$",
+          "optional": true
+        },
+        "maxFiles": {
+          "type": "number",
+          "description": "The maximum count of log files",
+          "optional": true
+        }
+      },
+      "required": [
+        "basePath"
+      ],
+      "description": "Logger configuration object",
+      "optional": true
+    }
+  },
+  "required": [
+    "workType",
+    "name",
+    "displayName",
+    "context",
+    "accountType"
+  ],
+  "additionalProperties": false
+}

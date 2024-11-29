@@ -1,0 +1,18 @@
+{
+  "workerType": "pureC",
+  "name": "ABC_MyTestSvc_CPP",
+  "displayName": "ABC Test C++ Service",
+  "context": "refvalue-test-service.dll",
+  "accountType": "localSystem",
+  "description": "Test C++ Service for SvcHost.",
+  "workingDirectory": "D:/",
+  "arguments": [
+    "Hello",
+    "World"
+  ],
+  "logger": {
+    "basePath": "logs/logger_cpp.log",
+    "maxSize": "10 MiB",
+    "maxFiles": 10
+  }
+}

@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.25)
+
+project(refvalue-test-service CXX)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+string(APPEND CMAKE_CXX_FLAGS " /utf-8")
+
+add_subdirectory(src)

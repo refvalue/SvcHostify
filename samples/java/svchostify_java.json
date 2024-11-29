@@ -1,0 +1,19 @@
+{
+  "workerType": "jvm",
+  "name": "ABC_SomeTestSvc_Java",
+  "displayName": "ABC Test Java Service",
+  "context": "E:/Projects/SvcHostify/samples/java/svchost.jar",
+  "accountType": "networkService",
+  "description": "A Test Java Service for SvcHost.",
+  "jdkDirectory": "D:/Libs/jdk-21.0.4+7",
+  "workingDirectory": "D:/",
+  "arguments": [
+    "Hello",
+    "World"
+  ],
+  "logger": {
+    "basePath": "logs/logger_java.log",
+    "maxSize": "10 MiB",
+    "maxFiles": 10
+  }
+}
