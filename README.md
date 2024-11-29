@@ -16,7 +16,7 @@ The latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/wi
 
 ## Downloading the Hosting DLL
 
-This project provides a C++ dynamic library that enables hosting a DLL service, which can be registered to be loaded by `svchost.exe`. The latest compiled release can be found on the [Release](releases/) page. The default name for the prebuilt DLL is typically `svchostify.dll`. You can download and extract it to any location on your disk that you prefer.
+This project provides a C++ dynamic library that enables hosting a DLL service, which can be registered to be loaded by `svchost.exe`. The latest compiled release can be found on the [Release](../../releases/) page. The default name for the prebuilt DLL is typically `svchostify.dll`. You can download and extract it to any location on your disk that you prefer.
 
 
 
