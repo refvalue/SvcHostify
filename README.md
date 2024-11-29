@@ -6,6 +6,8 @@
 
 `svchost.exe` is a critical system process for hosting DLLs as Windows Services, but some of its internal workings are undocumented. Creating custom `svchost` DLL services, especially when using languages like Java or C#, can be cumbersome. This is mainly due to the need for exporting C-style functions to interact with `svchost.exe`, which complicates the development process. To address this challenge, I created the "svchostify" project, which simplifies the creation of `svchost` DLL services, making it easier for developers to work with `svchost.exe` and supporting a wider range of programming languages.
 
+Microsoft says that `svchost.exe` is reversed for use by the operating system's own services, so this tool is for academic and research use only.
+
 
 
 ## Prerequisites
