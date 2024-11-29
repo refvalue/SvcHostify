@@ -148,7 +148,8 @@ namespace essence::win {
 
     abi::string get_registry_string(std::string_view path, std::string_view name) {
         // Uses c_str() to automatically remove the trailing null terminator.
-        return to_utf8_string(get_registry<std::wstring>(path, name, RRF_RT_REG_SZ).c_str()); // NOLINT(*-redundant-string-cstr)
+        return to_utf8_string(
+            get_registry<std::wstring>(path, name, RRF_RT_REG_SZ).c_str()); // NOLINT(*-redundant-string-cstr)
     }
 
     std::vector<abi::string> get_registry_multi_string(std::string_view path, std::string_view name) {

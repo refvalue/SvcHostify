@@ -56,9 +56,10 @@ using namespace essence;
 using namespace essence::cli;
 using namespace essence::win;
 
-BOOL WINAPI DllMain(HMODULE module, DWORD reason, void *reserved) {
+BOOL WINAPI DllMain(HMODULE module, DWORD reason, void* reserved) {
     switch (reason) {
-        case DLL_PROCESS_ATTACH: {
+    case DLL_PROCESS_ATTACH:
+        {
             if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
                 OutputDebugStringW(L"CoInitializeEx failed.");
 
@@ -71,12 +72,12 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void *reserved) {
             SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_USER_DIRS);
             break;
         }
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-        case DLL_PROCESS_DETACH:
-            [[fallthrough]];
-        default:
-            break;
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        [[fallthrough]];
+    default:
+        break;
     }
 
     return TRUE;
@@ -84,33 +85,33 @@ BOOL WINAPI DllMain(HMODULE module, DWORD reason, void *reserved) {
 
 extern "C" {
 ES_API(SVCHOSTIFY)
-void WINAPI invokeW(HWND window, HINSTANCE instance, const wchar_t *command_line, std::int32_t show) try {
+void WINAPI invokeW(HWND window, HINSTANCE instance, const wchar_t* command_line, std::int32_t show) try {
     std::atexit([] { std::system(U8("pause")); });
 
     const auto args = parse_command_line(command_line);
 
     auto opt_install = option<bool>{}
-            .set_bound_name(U8("install"))
-            .set_description(U8("Installs the service."))
-            .add_aliases(U8("i"))
-            .as_abstract();
+                           .set_bound_name(U8("install"))
+                           .set_description(U8("Installs the service."))
+                           .add_aliases(U8("i"))
+                           .as_abstract();
 
     auto opt_uninstall = option<bool>{}
-            .set_bound_name(U8("uninstall"))
-            .set_description(U8("Uninstalls the service."))
-            .add_aliases(U8("u"))
-            .as_abstract();
+                             .set_bound_name(U8("uninstall"))
+                             .set_description(U8("Uninstalls the service."))
+                             .add_aliases(U8("u"))
+                             .as_abstract();
 
     auto opt_config_file = option<std::string>{}
-            .set_bound_name(U8("config_file"))
-            .set_description(U8("Sets the configuration file path."))
-            .add_aliases(U8("c"))
-            .as_abstract();
+                               .set_bound_name(U8("config_file"))
+                               .set_description(U8("Sets the configuration file path."))
+                               .add_aliases(U8("c"))
+                               .as_abstract();
 
-    opt_config_file.on_validation([](std::string_view value, validation_result &result) {
+    opt_config_file.on_validation([](std::string_view value, validation_result& result) {
         if (std::error_code code; !std::filesystem::is_regular_file(to_u8string(value), code)) {
             result.success = false;
-            result.error = U8("The configuration file path must be a regular file.");
+            result.error   = U8("The configuration file path must be a regular file.");
         }
     });
 
@@ -135,7 +136,8 @@ void WINAPI invokeW(HWND window, HINSTANCE instance, const wchar_t *command_line
         const auto make_config = [&] { return load_config_and_setup(info->config_file); };
 
         if (info->install) {
-            auto config = make_config(); {
+            auto config = make_config();
+            {
                 // Validates the worker initialization which gives concrete errors before installation.
                 static_cast<void>(make_service_worker(config));
             }
@@ -150,11 +152,11 @@ void WINAPI invokeW(HWND window, HINSTANCE instance, const wchar_t *command_line
             return spdlog::info(U8("Service successfully uninstalled."));
         }
     }
-} catch (const std::exception &ex) {
+} catch (const std::exception& ex) {
     spdlog::error(ex.what());
 }
 
-ES_API(SVCHOSTIFY) void WINAPI ServiceMain(DWORD argc, wchar_t **argv) {
+ES_API(SVCHOSTIFY) void WINAPI ServiceMain(DWORD argc, wchar_t** argv) {
     const auto token = get_logger_shutdown_token();
 
     static_cast<void>(token);
@@ -168,7 +170,7 @@ ES_API(SVCHOSTIFY) void WINAPI ServiceMain(DWORD argc, wchar_t **argv) {
 
         service_process::instance().init(service_name);
         service_process::instance().run(make_service_worker_from_registry(service_name));
-    } catch (const std::exception &ex) {
+    } catch (const std::exception& ex) {
         spdlog::error(ex.what());
         OutputDebugStringW(to_native_string(ex.what()).c_str());
         service_process::instance().report_stopped();
