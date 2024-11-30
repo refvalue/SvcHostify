@@ -1,4 +1,4 @@
-# SvcHostify: Hosting Your Own Codebase as A DLL Service Easily (NOT ONLY svchost.exe!)
+# SvcHostify: Hosting Your Own Codebase as A DLL Service Easily (NOT ONLY svchost.exe)
 
 
 
