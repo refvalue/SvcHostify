@@ -22,12 +22,38 @@
 
 #include "service_config.hpp"
 
+#include "util.hpp"
+
+#include <essence/char8_t_remediation.hpp>
 #include <essence/crypto/digest.hpp>
 #include <essence/json_compat.hpp>
 
 using namespace essence::crypto;
 
 namespace essence::win {
+    service_config::logger_config service_config::default_values::logger_defaults::to_config() const {
+        return {
+            .base_path = base_path, .max_size = max_size, .max_files = max_files,
+        };
+    }
+
+    [[nodiscard]] const service_config::default_values& service_config::defaults() {
+        static const default_values defaults{
+            .standalone        = true,
+            .post_quit_message = false,
+            .working_directory = get_executing_directory(),
+            .dll_directories   = {{get_executing_directory()}},
+            .logger =
+                {
+                    .base_path = U8("logs/svchostify.log"),
+                    .max_size  = U8("50 MiB"),
+                    .max_files = 5U,
+                },
+        };
+
+        return defaults;
+    }
+
     service_config service_config::from_msgpack_base64(std::string_view base64) {
         return json::from_msgpack(base64_decode(base64)).get<service_config>();
     }

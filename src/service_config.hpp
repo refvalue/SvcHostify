@@ -50,11 +50,28 @@ namespace essence::win {
             std::optional<std::size_t> max_files;
         };
 
+        struct default_values {
+            struct logger_defaults {
+                std::string base_path;
+                std::string max_size{};
+                std::size_t max_files{};
+
+                logger_config to_config() const;
+            };
+
+            bool standalone{};
+            bool post_quit_message{};
+            std::string working_directory;
+            std::vector<std::string> dll_directories;
+            logger_defaults logger;
+        };
+
         service_worker_type worker_type{service_worker_type::executable};
         std::string name;
         std::string display_name;
         std::string context;
         service_account_type account_type{service_account_type::local_service};
+        std::optional<bool> standalone;
         std::optional<bool> post_quit_message;
         std::optional<std::string> description;
         std::optional<std::string> jdk_directory;
@@ -63,6 +80,7 @@ namespace essence::win {
         std::optional<std::vector<std::string>> dll_directories;
         std::optional<logger_config> logger;
 
+        [[nodiscard]] static const default_values& defaults();
         [[nodiscard]] static service_config from_msgpack_base64(std::string_view base64);
         [[nodiscard]] abi::string to_msgpack_base64() const;
     };

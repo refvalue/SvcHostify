@@ -38,6 +38,7 @@ namespace essence::win {
     [[nodiscard]] abi::string get_system_error(std::uint32_t code);
     [[nodiscard]] abi::string get_last_error();
     [[nodiscard]] abi::string get_system_directory();
+    [[nodiscard]] abi::string get_process_path();
     [[nodiscard]] abi::string get_executing_path();
     [[nodiscard]] std::string get_executing_directory();
     [[nodiscard]] std::uint32_t get_session_id();

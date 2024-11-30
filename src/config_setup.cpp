@@ -23,11 +23,11 @@
 #include "file_size_unit.hpp"
 #include "util.hpp"
 
+#include <algorithm>
 #include <atomic>
 #include <exception>
 #include <filesystem>
 #include <functional>
-#include <memory>
 #include <utility>
 
 #include <essence/char8_t_remediation.hpp>
@@ -44,12 +44,6 @@ using namespace essence::io;
 
 namespace essence::win {
     namespace {
-        const service_config::logger_config default_logger_config{
-            .base_path = U8("log/svchostify.log"),
-            .max_size  = U8("50 MiB"),
-            .max_files = 5U,
-        };
-
         constexpr std::pair valid_file_size_range{1024ULL, 1024 * 1024 * 1024 * 2ULL};
         constexpr std::pair valid_file_count_range{1ULL, 32ULL};
 
@@ -94,7 +88,7 @@ namespace essence::win {
         std::atomic<std::shared_ptr<stdio_to_sink_dispatcher>> dispatcher;
 
         auto parse_logger_config(const service_config& config) {
-            const auto logger_config = config.logger.value_or(default_logger_config);
+            const auto logger_config = config.logger.value_or(service_config::defaults().logger.to_config());
 
             if (logger_config.base_path.empty()) {
                 throw source_code_aware_runtime_error{U8("The logger base path must be non-empty.")};
@@ -112,7 +106,8 @@ namespace essence::win {
                 }
             }
 
-            const auto max_size = parse_file_size(logger_config.max_size.value_or(*default_logger_config.max_size));
+            const auto max_size =
+                parse_file_size(logger_config.max_size.value_or(service_config::defaults().logger.max_size));
 
             if (!max_size) {
                 throw source_code_aware_runtime_error{
@@ -125,7 +120,7 @@ namespace essence::win {
                     U8("The max file size was out of range.")};
             }
 
-            const auto max_files = logger_config.max_files.value_or(*default_logger_config.max_files);
+            const auto max_files = logger_config.max_files.value_or(service_config::defaults().logger.max_files);
 
             if (auto&& [min, max] = valid_file_count_range; max_files < min || max_files > max) {
                 throw source_code_aware_runtime_error{U8("Max Files"), *logger_config.max_files, U8("Lower Bound"), min,
@@ -169,8 +164,7 @@ namespace essence::win {
     } // namespace
 
     void setup_config(const service_config& config, bool enable_file_logging = false) {
-        static const auto executing_directory = get_executing_directory();
-        const auto working_directory          = config.working_directory.value_or(executing_directory);
+        const auto working_directory = config.working_directory.value_or(service_config::defaults().working_directory);
 
         spdlog::info(U8("Working directory: {}"), working_directory);
 
@@ -184,7 +178,7 @@ namespace essence::win {
 
         auto dll_directories = config.dll_directories.value_or(std::vector<std::string>{});
 
-        dll_directories.emplace_back(executing_directory);
+        std::ranges::copy(service_config::defaults().dll_directories, std::back_inserter(dll_directories));
         add_dll_directories(dll_directories);
     }
 

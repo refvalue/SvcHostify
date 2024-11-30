@@ -25,6 +25,7 @@
 #include "config_setup.hpp"
 #include "win32/svchost.h"
 
+#include <array>
 #include <exception>
 #include <filesystem>
 #include <future>
@@ -44,6 +45,8 @@
 #define NOMINMAX
 #define NOGDI
 
+#include "util.hpp"
+
 #include <Windows.h>
 
 namespace essence::win {
@@ -53,16 +56,37 @@ namespace essence::win {
 
     class service_process::impl {
     public:
-        impl() : status_{.dwServiceType = SERVICE_WIN32_SHARE_PROCESS}, status_handle_{}, global_data_{} {}
+        impl()
+            : standalone_{!get_process_path().ends_with(U8("svchost.exe"))},
+              status_{.dwServiceType =
+                          static_cast<DWORD>(standalone_ ? SERVICE_WIN32_OWN_PROCESS : SERVICE_WIN32_SHARE_PROCESS)},
+              status_handle_{}, global_data_{} {}
+
+        static impl& self() noexcept {
+            return *instance().impl_;
+        }
 
         void init(zwstring_view service_name) {
             service_name_.assign(service_name);
-            status_handle_ = RegisterServiceCtrlHandlerExW(service_name_.c_str(), &impl::service_ctrl_handler, this);
+            register_control_handler();
         }
 
         void run(abstract::service_worker worker) {
             worker_.emplace(std::move(worker));
-            start();
+
+            if (standalone_) {
+                static std::array entries{
+                    SERVICE_TABLE_ENTRYW{
+                        .lpServiceName = service_name_.data(),
+                        .lpServiceProc = &impl::service_main,
+                    },
+                    SERVICE_TABLE_ENTRYW{},
+                };
+
+                StartServiceCtrlDispatcherW(entries.data());
+            } else {
+                start();
+            }
         }
 
         void report_stopped() {
@@ -75,6 +99,13 @@ namespace essence::win {
         }
 
     private:
+        void register_control_handler(bool force = false) {
+            if (force || !standalone_) {
+                status_handle_ =
+                    RegisterServiceCtrlHandlerExW(service_name_.c_str(), &impl::service_ctrl_handler, this);
+            }
+        }
+
         void run_business() try {
             std::promise<void> promise;
             std::jthread worker{[&] {
@@ -101,6 +132,8 @@ namespace essence::win {
         }
 
         void start() {
+            register_control_handler(true);
+
             report_status(SERVICE_START_PENDING, pending_wait_hint);
             spdlog::info("The service start is pending.");
 
@@ -124,6 +157,10 @@ namespace essence::win {
                 worker_->on_stop();
             } catch (...) {
             }
+        }
+
+        static void service_main(DWORD argc, wchar_t** argv) {
+            self().start();
         }
 
         static DWORD WINAPI service_ctrl_handler(DWORD control, DWORD event_type, void* event_data, void* context) {
@@ -152,6 +189,7 @@ namespace essence::win {
             static_cast<void>(SetServiceStatus(status_handle_, &status_));
         }
 
+        bool standalone_;
         SERVICE_STATUS status_;
         SERVICE_STATUS_HANDLE status_handle_;
         std::optional<abstract::service_worker> worker_;

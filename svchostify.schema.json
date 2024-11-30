@@ -33,6 +33,11 @@
       ],
       "description": "The account type under which the service runs"
     },
+    "standalone": {
+      "type": "boolean",
+      "description": "Indicates whether to run as a standalone service (hosted in 'rundll32.exe') instead of 'svchost.exe'",
+      "optional": true
+    },
     "postQuitMessage": {
       "type": "boolean",
       "description": "Indicates whether to post a quit message before the service exits when the type is 'executable'",

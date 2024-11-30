@@ -48,6 +48,19 @@ namespace essence::win {
     namespace {
         template <typename T>
         using local_ptr = std::unique_ptr<T[], decltype([](T* inner) { LocalFree(inner); })>;
+
+        abi::string get_module_path(std::uint32_t flags, const void* name_or_address) {
+            if (HMODULE module; GetModuleHandleExW(flags, static_cast<const wchar_t*>(name_or_address), &module)) {
+                std::wstring path(MAX_PATH, L'\0');
+
+                path.resize(GetModuleFileNameW(module, path.data(), static_cast<DWORD>(path.size())));
+                path.shrink_to_fit();
+
+                return to_utf8_string(path);
+            }
+
+            return {};
+        }
     } // namespace
 
     abi::string get_system_error(std::uint32_t code) {
@@ -74,19 +87,13 @@ namespace essence::win {
         return to_utf8_string(result);
     }
 
+    abi::string get_process_path() {
+        return get_module_path(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, nullptr);
+    }
+
     abi::string get_executing_path() {
-        if (HMODULE module;
-            GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                reinterpret_cast<const wchar_t*>(&get_executing_path), &module)) {
-            std::wstring path(MAX_PATH, L'\0');
-
-            path.resize(GetModuleFileNameW(module, path.data(), static_cast<DWORD>(path.size())));
-            path.shrink_to_fit();
-
-            return to_utf8_string(path);
-        }
-
-        return {};
+        return get_module_path(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, &get_executing_path);
     }
 
     std::string get_executing_directory() {

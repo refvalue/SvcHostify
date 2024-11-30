@@ -56,14 +56,17 @@ namespace essence::win {
     namespace {
         using sc_handle = unique_handle<&CloseServiceHandle>;
 
-        const auto svchost_executable = std::filesystem::path{to_u8string(get_system_directory())} / u8"svchost.exe";
+        const auto system_directory    = std::filesystem::path{to_u8string(get_system_directory())};
+        const auto svchost_executable  = from_u8string((system_directory / u8"svchost.exe").generic_u8string());
+        const auto rundll32_executable = from_u8string((system_directory / u8"rundll32.exe").generic_u8string());
     } // namespace
 
     class service_manager::impl {
     public:
         explicit impl(service_config config)
-            : config_{std::move(config)}, checker_{make_service_error_checker(config_)},
-              service_name_{to_native_string(config_.name)},
+            : config_{std::move(config)},
+              standalone_{config_.standalone.value_or(service_config::defaults().standalone)},
+              checker_{make_service_error_checker(config_)}, service_name_{to_native_string(config_.name)},
               group_name_{format(U8("Broker_{}_{}"), config_.name, make_digest(digest_mode::sha3_224, config_.name))},
               group_key_{service_registry_keys::svchost_key},
               service_param_key_{format(service_registry_keys::service_param_key_pattern, config_.name)} {
@@ -72,12 +75,15 @@ namespace essence::win {
         }
 
         void install() const {
-            const auto path = to_native_string(
-                format(U8("{} -k {}"), from_u8string(svchost_executable.generic_u8string()), group_name_));
+            const auto path = standalone_ ? to_native_string(format(U8("{} \"{}\" service {}"), rundll32_executable,
+                                                get_executing_path(), to_utf8_string(service_name_)))
+                                          : to_native_string(format(U8("{} -k {}"), svchost_executable, group_name_));
+
+            const auto service_type = standalone_ ? SERVICE_WIN32_OWN_PROCESS : SERVICE_WIN32_SHARE_PROCESS;
 
             const sc_handle handle{CreateServiceW(ensure_scm().get(), service_name_.c_str(),
-                to_native_string(config_.display_name).c_str(), SERVICE_ALL_ACCESS, SERVICE_WIN32_SHARE_PROCESS,
-                SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, path.c_str(), nullptr, nullptr, nullptr,
+                to_native_string(config_.display_name).c_str(), SERVICE_ALL_ACCESS, service_type, SERVICE_AUTO_START,
+                SERVICE_ERROR_NORMAL, path.c_str(), nullptr, nullptr, nullptr,
                 get_service_account_name(config_.account_type).c_str(), nullptr)};
 
             checker_(static_cast<bool>(handle), U8("Failed to install the service."));
@@ -90,7 +96,11 @@ namespace essence::win {
                     U8("Failed to set the description of the service."));
             }
 
-            register_svchost();
+            if (!standalone_) {
+                register_svchost();
+            }
+
+            set_registry(service_param_key_, service_registry_keys::startup_configuration, config_.to_msgpack_base64());
         }
 
         void uninstall() const {
@@ -102,7 +112,9 @@ namespace essence::win {
                 U8("Failed to stop the service."));
             checker_(DeleteService(handle.get()), U8("Failed to uninstall the service."));
 
-            unregister_svchost();
+            if (!standalone_) {
+                unregister_svchost();
+            }
         }
 
         [[nodiscard]] bool installed() const {
@@ -123,7 +135,7 @@ namespace essence::win {
             sc_handle handle{OpenServiceW(ensure_scm().get(), service_name_.c_str(), desired_access)};
 
             if constexpr (Raise) {
-                checker_(static_cast<bool>(handle), U8("Failed to open service."));
+                checker_(static_cast<bool>(handle), U8("Failed to open the service."));
             }
 
             return handle;
@@ -138,7 +150,6 @@ namespace essence::win {
             set_registry(service_param_key_, service_registry_keys::service_dll, get_executing_path(), true);
             set_registry(service_param_key_, service_registry_keys::service_dll_unload_on_stop, 1U);
             set_registry(service_param_key_, service_registry_keys::service_main, U8("ServiceMain"));
-            set_registry(service_param_key_, service_registry_keys::startup_configuration, config_.to_msgpack_base64());
         }
 
         void unregister_svchost() const try {
@@ -149,6 +160,7 @@ namespace essence::win {
         }
 
         service_config config_;
+        bool standalone_;
         error_checking_handler checker_;
         abi::nstring service_name_;
         std::string group_name_;

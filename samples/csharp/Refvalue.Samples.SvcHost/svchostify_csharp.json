@@ -4,7 +4,8 @@
   "displayName": "ABC Test CSharp Service",
   "context": "{47D7093F-69E2-D17D-422D-49BE836EF3A5}",
   "accountType": "localSystem",
-  "description": "Test CSharp (Hosted as a COM server) Service for SvcHost.",
+  "standalone": true,
+  "description": "Test CSharp (Hosted as a COM server) Service.",
   "workingDirectory": "D:/",
   "arguments": [
     "Hello",

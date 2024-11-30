@@ -1,4 +1,4 @@
-﻿set(target_version 0.1.0)
+﻿set(target_version 0.2.0)
 set(target_name svchostify)
 set(package_name SvcHostify)
 

@@ -4,7 +4,8 @@
   "displayName": "ABC Test Java Service",
   "context": "E:/Projects/SvcHostify/samples/java/svchost.jar",
   "accountType": "networkService",
-  "description": "A Test Java Service for SvcHost.",
+  "standalone": true,
+  "description": "A Test Java Service.",
   "jdkDirectory": "D:/Libs/jdk-21.0.4+7",
   "workingDirectory": "D:/",
   "arguments": [

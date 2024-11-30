@@ -1,4 +1,4 @@
-# SvcHostify: Hosting Your Own Codebase as A SvcHost DLL Service Easily
+# SvcHostify: Hosting Your Own Codebase as A DLL Service Easily
 
 
 
@@ -6,7 +6,21 @@
 
 `svchost.exe` is a critical system process for hosting DLLs as Windows Services, but some of its internal workings are undocumented. Creating custom `svchost` DLL services, especially when using languages like Java or C#, can be cumbersome. This is mainly due to the need for exporting C-style functions to interact with `svchost.exe`, which complicates the development process. To address this challenge, I created the "svchostify" project, which simplifies the creation of `svchost` DLL services, making it easier for developers to work with `svchost.exe` and supporting a wider range of programming languages.
 
-Microsoft states that `svchost.exe` is reserved for use by the operating system’s own services, so this tool is intended for academic and research purposes only, and might be used in personal environments. It is not recommended for use in production systems.
+
+
+## SvcHost Mode - For Personal Use
+
+Microsoft states that `svchost.exe` is reserved for use by the operating system’s own services, so hosting as a SvcHost service is intended for academic and research purposes only, and might be used in personal environments. It is not recommended for use in production systems.
+
+
+
+## Standalone Mode - For Production Use (NEW in [v0.1.1]())
+
+This project provides production-friendly mode, that is to run as a standalone service loaded by `rundll32.exe`, the operating system's DLL loader. This mode can also be distributed without any third-party executable and NVIDIA creates its service using this way.
+
+![image-20241130100827582](standalone.png)
+
+**NOTE: This mode is set by default started in v0.1.1.**
 
 
 
@@ -54,20 +68,21 @@ rundll32 svchostify.dll invoke -u -c <CONFIG_FILE>
 
 The hosting service reads a JSON file for its internal configuration and the key-value pairs and objects are defined as follows:
 
-| Field Name         | Type              | Description                                                  | Possible Values                                 | Default          | Required |
-| ------------------ | ----------------- | ------------------------------------------------------------ | ----------------------------------------------- | ---------------- | -------- |
-| `workType`         | `string`          | The type of the service.                                     | `com`, `pure_c`, `jvm`, `executable`            |                  | Yes      |
-| `name`             | `string`          | The name of the service.                                     | Any                                             |                  | Yes      |
-| `displayName`      | `string`          | The display name of the service.                             | Any                                             |                  | Yes      |
-| `context`          | `string`          | Arbitrary content according to the work type: a coclass `{GUID}` for `com`, a DLL path for `pure_c`, a `CLASSPATH` for `jvm`, an EXE path for `executable`. | Any                                             |                  | Yes      |
-| `accountType`      | `string`          | The account type under which the service runs.               | `localSystem`, `networkService`, `localService` |                  | Yes      |
-| `postQuitMessage`  | `boolean`         | Indicates whether to post a quit message before the service exits when the type is `executable`. | `true`, `false`                                 | `false`          | No       |
-| `description`      | `string`          | A description of the service.                                | Any                                             | `null`           | No       |
-| `jdkDirectory`     | `string`          | The JDK Directory.                                           | Any valid directory path                        | `null`           | No       |
-| `workingDirectory` | `string`          | The initial working directory.                               | Any valid directory path                        | The DLL location | No       |
-| `arguments`        | `array of string` | The startup arguments for the service.                       | `List of string`                                | `null`           | No       |
-| `dllDirectories`   | `array of string` | Additional directories for loading DLLs.                     | List of directories                             | The DLL location | No       |
-| `logger`           | `object`          | Logger configuration object.                                 | See below                                       | See below        | No       |
+| Field Name                             | Type              | Description                                                  | Possible Values                                 | Default          | Required |
+| -------------------------------------- | ----------------- | ------------------------------------------------------------ | ----------------------------------------------- | ---------------- | -------- |
+| `workType`                             | `string`          | The type of the service.                                     | `com`, `pure_c`, `jvm`, `executable`            |                  | Yes      |
+| `name`                                 | `string`          | The name of the service.                                     | Any                                             |                  | Yes      |
+| `displayName`                          | `string`          | The display name of the service.                             | Any                                             |                  | Yes      |
+| `context`                              | `string`          | Arbitrary content according to the work type: a coclass `{GUID}` for `com`, a DLL path for `pure_c`, a `CLASSPATH` for `jvm`, an EXE path for `executable`. | Any                                             |                  | Yes      |
+| `accountType`                          | `string`          | The account type under which the service runs.               | `localSystem`, `networkService`, `localService` |                  | Yes      |
+| `standalone` <br />**(NEW in v0.1.1)** | `boolean`         | Indicates whether to run as a standalone service (hosted in `rundll32.exe`) instead of `svchost.exe` | `true`, `false`                                 | `true`           | No       |
+| `postQuitMessage`                      | `boolean`         | Indicates whether to post a quit message before the service exits when the type is `executable`. | `true`, `false`                                 | `false`          | No       |
+| `description`                          | `string`          | A description of the service.                                | Any                                             | `null`           | No       |
+| `jdkDirectory`                         | `string`          | The JDK Directory.                                           | Any valid directory path                        | `null`           | No       |
+| `workingDirectory`                     | `string`          | The initial working directory.                               | Any valid directory path                        | The DLL location | No       |
+| `arguments`                            | `array of string` | The startup arguments for the service.                       | `List of string`                                | `null`           | No       |
+| `dllDirectories`                       | `array of string` | Additional directories for loading DLLs.                     | List of directories                             | The DLL location | No       |
+| `logger`                               | `object`          | Logger configuration object.                                 | See below                                       | See below        | No       |
 
 #### Logger Configuration Object
 
@@ -92,6 +107,7 @@ The hosting service reads a JSON file for its internal configuration and the key
   "displayName": "ABC Test Java Service",
   "context": "E:/Projects/SvcHostify/samples/svchost.jar",
   "accountType": "networkService",
+  "standalone": true,
   "description": "A Test Java Service for SvcHost.",
   "jdkDirectory": "D:/jdk-21",
   "workingDirectory": "D:/",
@@ -120,6 +136,7 @@ The sample project is [located here](samples/java/).
   "displayName": "ABC Test CSharp Service",
   "context": "{47D7093F-69E2-D17D-422D-49BE836EF3A5}",
   "accountType": "localSystem",
+  "standalone": true,
   "description": "Test CSharp (Hosted as a COM server) Service for SvcHost.",
   "workingDirectory": "D:/",
   "arguments": [
@@ -147,6 +164,7 @@ The sample project can be [checked here](samples/csharp/).
   "displayName": "ABC Test C++ Service",
   "context": "refvalue-test-service.dll",
   "accountType": "localSystem",
+  "standalone": true,
   "description": "Test C++ Service for SvcHost.",
   "workingDirectory": "D:/",
   "arguments": [

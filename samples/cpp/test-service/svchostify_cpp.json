@@ -4,6 +4,7 @@
   "displayName": "ABC Test C++ Service",
   "context": "refvalue-test-service.dll",
   "accountType": "localSystem",
+  "standalone": true,
   "description": "Test C++ Service for SvcHost.",
   "workingDirectory": "D:/",
   "arguments": [

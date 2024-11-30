@@ -177,4 +177,12 @@ ES_API(SVCHOSTIFY) void WINAPI ServiceMain(DWORD argc, wchar_t** argv) {
         service_process::instance().report_stopped();
     }
 }
+
+ES_API(SVCHOSTIFY)
+void WINAPI serviceW(HWND window, HINSTANCE instance, const wchar_t* command_line, std::int32_t show) {
+    std::uintptr_t storage{};
+
+    OutputDebugStringW(command_line);
+    ServiceMain(1, new (&storage) wchar_t* {const_cast<wchar_t*>(command_line)});
+}
 }
