@@ -16,7 +16,7 @@ Microsoft states that `svchost.exe` is reserved for use by the operating systemâ
 
 ## Standalone Mode - For Production Use (NEW in [v0.1.1]())
 
-This project provides production-friendly mode, that is to run as a standalone service loaded by `rundll32.exe`, the operating system's DLL loader. This mode can also be distributed without any third-party executable and NVIDIA creates its service using this way.
+This project provides a production-friendly mode, which allows it to run as a standalone service loaded by `rundll32.exe`, the operating system's DLL loader. This mode can be distributed without requiring any third-party executables. NVIDIA, for instance, uses this method to create its services.
 
 ![standalone.png](standalone.png)
 
