@@ -20,24 +20,13 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+export module refvalue.svchostify:startup_info;
+import std;
 
-#include <functional>
-#include <string_view>
-
-namespace essence::win {
-    enum class service_worker_type {
-        executable,
-        pure_c,
-        com,
-        jvm,
+export namespace essence::win {
+    struct startup_info {
+        bool install{};
+        bool uninstall{};
+        std::string config_file;
     };
-
-    enum class service_account_type {
-        local_system,
-        local_service,
-        network_service,
-    };
-
-    using error_checking_handler = std::function<void(bool success, std::string_view message)>;
-}
+} // namespace essence::win

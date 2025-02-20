@@ -20,20 +20,21 @@
  * THE SOFTWARE.
  */
 
-#include "service_worker.hpp"
-
-#include "config_setup.hpp"
-#include "registry.hpp"
-#include "service_registry_keys.hpp"
-
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/format_remediation.hpp>
+
+module refvalue.svchostify;
+import :config_setup;
+import :registry;
+import :service_registry_keys;
 
 namespace essence::win {
+    abstract::service_worker make_executable_service_worker(service_config config);
+    abstract::service_worker make_pure_c_service_worker(service_config config);
+    abstract::service_worker make_com_service_worker(service_config config);
+    abstract::service_worker make_jvm_service_worker(service_config config);
+
     abstract::service_worker make_service_worker(service_config config) {
         switch (config.worker_type) {
         case service_worker_type::executable:
@@ -45,7 +46,7 @@ namespace essence::win {
         case service_worker_type::jvm:
             return make_jvm_service_worker(std::move(config));
         default:
-            throw source_code_aware_runtime_error{U8("Invalid worker type.")};
+            throw formatted_runtime_error{U8("Invalid worker type.")};
         }
     }
 

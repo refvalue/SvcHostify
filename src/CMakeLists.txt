@@ -5,17 +5,23 @@ set(package_name SvcHostify)
 add_library(${target_name} SHARED)
 
 file(
-    GLOB private_sources
+    GLOB_RECURSE miu_sources
     CONFIGURE_DEPENDS
-    *.hpp
+    *.ixx
+    *.cxx
+)
+
+file(
+    GLOB_RECURSE private_sources
+    CONFIGURE_DEPENDS
     *.cpp
-    abstract/*.hpp
-    workers/*.hpp
-    workers/*.cpp
 )
 
 target_sources(
     ${target_name}
+    PUBLIC
+    FILE_SET CXX_MODULES
+    FILES ${miu_sources}
     PRIVATE
     ${private_sources}
 )
@@ -38,15 +44,14 @@ target_link_libraries(
     PRIVATE
     Threads::Threads
     CppEssence::cpp-essence
-    CppEssenceJniSupport::cpp-essence-jni-support
+    CppEssence::cpp-essence-jni-support
     ${JNI_LIBRARIES}
 )
 
-set_target_properties(
+target_compile_features(
     ${target_name}
-    PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
+    PRIVATE
+    cxx_std_23
 )
 
 if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -60,8 +65,8 @@ endif()
 include(ESPackaging)
 
 es_make_install_package(
-    TARGET_NAME ${target_name}
-    TARGET_VERSION ${target_version}
+    TARGETS ${target_name}
+    VERSION ${target_version}
     PACKAGE_NAME ${package_name}
     PATH_VARS CMAKE_INSTALL_PREFIX
 )

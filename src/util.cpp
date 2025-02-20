@@ -20,29 +20,21 @@
  * THE SOFTWARE.
  */
 
-#include "util.hpp"
+module;
 
-#include "filesystem_tokens.hpp"
-
-#include <cstddef>
 #include <cstdio>
-#include <filesystem>
-#include <limits>
-#include <memory>
-#include <ranges>
-#include <utility>
-
-#include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/range.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 
+#include <essence/char8_t_remediation.hpp>
+
 #include <Windows.h>
 #include <shellapi.h>
+
+module refvalue.svchostify;
+import :filesystem_tokens;
 
 namespace essence::win {
     namespace {
@@ -119,15 +111,6 @@ namespace essence::win {
         }
     }
 
-    error_checking_handler make_service_error_checker(const service_config& config) {
-        return [name = config.name, context = config.context](bool success, std::string_view message) {
-            if (!success) {
-                throw source_code_aware_runtime_error{
-                    U8("Name"), name, U8("Path"), context, U8("Message"), message, U8("Internal"), get_last_error()};
-            }
-        };
-    }
-
     std::vector<abi::string> parse_command_line(zwstring_view command_line) {
         std::vector<abi::string> result;
 
@@ -167,9 +150,10 @@ namespace essence::win {
         };
 
         auto list  = args | std::views::transform(escape) | std::views::transform(&to_native_string);
-        auto joint = join_with(list, std::wstring_view{&filesystem_tokens::command_line_separator_wide, 1U});
+        auto joint = join_with(list, std::wstring_view{&filesystem_tokens::command_line_separator_wide, 1U})
+                   | std::ranges::to<abi::wstring>();
 
-        return {joint.begin(), joint.end()};
+        return joint;
     }
 
     void allocate_console_and_redirect() {

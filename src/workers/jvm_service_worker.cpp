@@ -20,26 +20,10 @@
  * THE SOFTWARE.
  */
 
-#include "../service_worker.hpp"
-#include "../util.hpp"
-
-#include <array>
-#include <atomic>
-#include <filesystem>
-#include <span>
-#include <string_view>
-#include <tuple>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
 #include <essence/compat.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/jni/global_ref.hpp>
-#include <essence/jni/jvm.hpp>
-#include <essence/jni/reflector.hpp>
-#include <essence/jni/util.hpp>
-#include <essence/managed_handle.hpp>
-#include <essence/zstring_view.hpp>
 
 #include <jni.h>
 
@@ -48,7 +32,15 @@
 #define NOGDI
 
 #include <Windows.h>
-#include <spdlog/spdlog.h>
+
+module refvalue.svchostify;
+import :abstract.service_worker;
+import :service_config;
+import :service_worker;
+import :util;
+import essence.basic;
+import essence.jni;
+import std;
 
 using namespace essence::jni;
 
@@ -79,7 +71,7 @@ namespace essence::win {
                 };
 
                 if (create_java_vm_(&vm, reinterpret_cast<void**>(&env), &args) != JNI_OK) {
-                    throw source_code_aware_runtime_error{U8("Failed to create Java VM.")};
+                    throw formatted_runtime_error{U8("Failed to create Java VM.")};
                 }
 
                 jvm::instance().init(vm);
@@ -96,21 +88,21 @@ namespace essence::win {
                 if (jvm_module_.reset(
                         LoadLibraryExW(jvm_path.generic_wstring().c_str(), nullptr, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
                     !jvm_module_) {
-                    throw source_code_aware_runtime_error{U8("JVM Runtime"), from_u8string(jvm_path.generic_u8string()),
+                    throw formatted_runtime_error{U8("JVM Runtime"), from_u8string(jvm_path.generic_u8string()),
                         U8("Message"), U8("Failed to load JVM.")};
                 }
 
                 if (awt_module_.reset(
                         LoadLibraryExW(awt_path.generic_wstring().c_str(), nullptr, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
                     !awt_module_) {
-                    throw source_code_aware_runtime_error{U8("AWT Runtime"), from_u8string(awt_path.generic_u8string()),
+                    throw formatted_runtime_error{U8("AWT Runtime"), from_u8string(awt_path.generic_u8string()),
                         U8("Message"), U8("Failed to load AWT.")};
                 }
 
                 if (create_java_vm_ = reinterpret_cast<decltype(create_java_vm_)>(
                         GetProcAddress(jvm_module_.get(), U8("JNI_CreateJavaVM")));
                     create_java_vm_ == nullptr) {
-                    throw source_code_aware_runtime_error{U8("Failed to load the 'JNI_CreateJavaVM' function.")};
+                    throw formatted_runtime_error{U8("Failed to load the 'JNI_CreateJavaVM' function.")};
                 }
             }
 
@@ -121,7 +113,7 @@ namespace essence::win {
 
         void handle_java_exception() {
             if (const auto ex = try_catch_exception()) {
-                throw source_code_aware_runtime_error{
+                throw formatted_runtime_error{
                     U8("Message"), U8("An exception was thrown inside the java code."), U8("Java Exception"), *ex};
             }
         }
@@ -131,16 +123,16 @@ namespace essence::win {
             explicit jvm_service_worker(service_config config)
                 : config_{std::move(config)}, method_run_{}, method_on_stop_{} {
                 if (config_.context.empty()) {
-                    throw source_code_aware_runtime_error{U8("Class Path"), config_.context, U8("Message"),
+                    throw formatted_runtime_error{U8("Class Path"), config_.context, U8("Message"),
                         U8("The context must be a non-empty CLASSPATH for JVM bootstrap.")};
                 }
 
                 if (!config_.jdk_directory) {
-                    throw source_code_aware_runtime_error{U8("The JDK directory must be set.")};
+                    throw formatted_runtime_error{U8("The JDK directory must be set.")};
                 }
 
                 if (std::error_code code; !std::filesystem::is_directory(to_u8string(*config_.jdk_directory), code)) {
-                    throw source_code_aware_runtime_error{
+                    throw formatted_runtime_error{
                         U8("JDK Directory"), config_.context, U8("Message"), U8("The JDK directory must exist.")};
                 }
 

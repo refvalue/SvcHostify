@@ -20,30 +20,22 @@
  * THE SOFTWARE.
  */
 
-#include "registry.hpp"
-
-#include "filesystem_tokens.hpp"
-#include "util.hpp"
-
-#include <array>
-#include <functional>
-#include <ranges>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
-
-#include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/range.hpp>
-#include <essence/string.hpp>
+module;
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 
+#include <essence/char8_t_remediation.hpp>
+
 #include <Windows.h>
 #include <shellapi.h>
+
+module refvalue.svchostify:registry;
+import :filesystem_tokens;
+import :util;
+import essence.basic;
+import std;
 
 namespace essence::win {
     namespace {
@@ -86,18 +78,14 @@ namespace essence::win {
         template <typename... Args>
         void check_registry_error(std::uint32_t code, Args&&... args) {
             if (code != ERROR_SUCCESS) {
-                throw source_code_aware_runtime_error{
-                    std::forward<Args>(args)..., U8("Internal"), get_system_error(code)};
+                throw formatted_runtime_error{std::forward<Args>(args)..., U8("Internal"), get_system_error(code)};
             }
         }
 
         std::pair<HKEY, abi::wstring> decompose_registry_path(std::string_view path) {
-            thread_local std::string preferred_path;
-            auto preferred = path | std::views::transform([](char ch) {
+            const auto preferred_path = path | std::views::transform([](char ch) {
                 return ch == filesystem_tokens::generic_separator ? filesystem_tokens::preferred_separator : ch;
-            });
-
-            preferred_path.assign(preferred.begin(), preferred.end());
+            }) | std::ranges::to<std::string>();
 
             const auto pure_path = trim_right(preferred_path, filesystem_tokens::preferred_separator_group);
             const auto first_component =
@@ -109,7 +97,7 @@ namespace essence::win {
                                           filesystem_tokens::preferred_separator_group))};
             }
 
-            throw source_code_aware_runtime_error{U8("Key"), path, U8("Message"), U8("Illegal registry key.")};
+            throw formatted_runtime_error{U8("Key"), path, U8("Message"), U8("Illegal registry key.")};
         }
 
         void set_registry(
@@ -156,9 +144,10 @@ namespace essence::win {
         const auto buffer = get_registry<std::wstring>(path, name, RRF_RT_REG_MULTI_SZ);
         auto lines        = buffer | std::views::take(buffer.size() - 1) | std::views::split(L'\0')
                    | std::views::transform(
-                       [](const auto& inner) { return to_utf8_string(std::wstring_view{inner.begin(), inner.end()}); });
+                       [](const auto& inner) { return to_utf8_string(std::wstring_view{inner.begin(), inner.end()}); })
+                   | std::ranges::to<std::vector>();
 
-        return {lines.begin(), lines.end()};
+        return lines;
     }
 
     std::vector<std::byte> get_registry_binary(std::string_view path, std::string_view name) {
@@ -174,8 +163,8 @@ namespace essence::win {
     }
 
     void set_registry(std::string_view path, std::string_view name, std::span<const std::string> values) {
-        auto joint = join_with(values | std::views::transform(&to_native_string), std::array{L'\0'});
-        std::wstring multi_sz{joint.begin(), joint.end()};
+        auto multi_sz = join_with(values | std::views::transform(&to_native_string), std::array{L'\0'})
+                      | std::ranges::to<std::wstring>();
 
         multi_sz.append(2, L'\0');
 
@@ -186,7 +175,7 @@ namespace essence::win {
         set_registry(path, name, REG_BINARY, values.data(), values.size());
     }
 
-    void set_registry(std::string_view path, std::string_view name, zstring_view value, bool expand_sz) {
+    void set_registry(std::string_view path, std::string_view name, zstring_view value, bool expand_sz = false) {
         const auto native = to_native_string(value);
 
         set_registry(path, name, expand_sz ? REG_EXPAND_SZ : REG_SZ, native.c_str(), native.size() * sizeof(wchar_t));

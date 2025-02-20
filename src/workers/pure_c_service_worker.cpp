@@ -20,25 +20,22 @@
  * THE SOFTWARE.
  */
 
-#include "../service_worker.hpp"
-
-#include <cstddef>
-#include <memory>
-#include <new>
-#include <span>
-#include <string>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/managed_handle.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 
 #include <Windows.h>
+
+module refvalue.svchostify;
+import :abstract.service_worker;
+import :service_config;
+import :service_worker;
+import essence.basic;
+import std;
 
 namespace essence::win {
     namespace {
@@ -61,27 +58,26 @@ namespace essence::win {
         public:
             explicit pure_c_service_worker(service_config config) : config_{std::move(config)}, run_{}, on_stop_{} {
                 if (config_.context.empty()) {
-                    throw source_code_aware_runtime_error{U8("The context must be a non-empty DLL path.")};
+                    throw formatted_runtime_error{U8("The context must be a non-empty DLL path.")};
                 }
 
                 if (module_dll_.reset(LoadLibraryExW(
                         to_native_string(config_.context).c_str(), nullptr, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS));
                     !module_dll_) {
-                    throw source_code_aware_runtime_error{
+                    throw formatted_runtime_error{
                         U8("DLL Path"), config_.context, U8("Message"), U8("Failed to load the DLL.")};
                 }
 
                 if (run_ = reinterpret_cast<refvalue_svchostify_run_ptr>(
                         GetProcAddress(module_dll_.get(), U8("refvalue_svchostify_run")));
                     run_ == nullptr) {
-                    throw source_code_aware_runtime_error{U8("Failed to load the 'refvalue_svchostify_run' function.")};
+                    throw formatted_runtime_error{U8("Failed to load the 'refvalue_svchostify_run' function.")};
                 }
 
                 if (on_stop_ = reinterpret_cast<refvalue_svchostify_on_stop_ptr>(
                         GetProcAddress(module_dll_.get(), U8("refvalue_svchostify_on_stop")));
                     on_stop_ == nullptr) {
-                    throw source_code_aware_runtime_error{
-                        U8("Failed to load the 'refvalue_svchostify_on_stop' function.")};
+                    throw formatted_runtime_error{U8("Failed to load the 'refvalue_svchostify_on_stop' function.")};
                 }
             }
 

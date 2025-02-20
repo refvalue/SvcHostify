@@ -20,14 +20,19 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+module;
 
-#include <string>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#define NOGDI
+#include <Unknwnbase.h>
+#include <comdef.h>
 
-namespace essence::win {
-    struct startup_info {
-        bool install{};
-        bool uninstall{};
-        std::string config_file;
-    };
-} // namespace essence::win
+module refvalue.svchostify:win32.ISvcHostify;
+
+struct __declspec(novtable, uuid("CB62E85F-0C69-C76B-E955-655E0D184E5A")) ISvcHostify : IUnknown {
+    virtual STDMETHODIMP Run(SAFEARRAY* args) = 0;
+    virtual STDMETHODIMP OnStop()             = 0;
+};
+
+_COM_SMARTPTR_TYPEDEF(ISvcHostify, __uuidof(ISvcHostify));

@@ -20,19 +20,12 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+export module refvalue.svchostify:service_config;
+import :common_types;
+import essence.basic;
+import std;
 
-#include "common_types.hpp"
-
-#include <cstddef>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <vector>
-
-#include <essence/abi/string.hpp>
-
-namespace essence::win {
+export namespace essence::win {
     struct service_config {
         enum class json_serialization {
             camel_case,
@@ -53,10 +46,10 @@ namespace essence::win {
         struct default_values {
             struct logger_defaults {
                 std::string base_path;
-                std::string max_size{};
+                std::string max_size;
                 std::size_t max_files{};
 
-                logger_config to_config() const;
+                [[nodiscard]] logger_config to_config() const;
             };
 
             bool standalone{};
@@ -84,4 +77,6 @@ namespace essence::win {
         [[nodiscard]] static service_config from_msgpack_base64(std::string_view base64);
         [[nodiscard]] abi::string to_msgpack_base64() const;
     };
+
+    error_checking_handler make_service_error_checker(const service_config& config);
 } // namespace essence::win

@@ -20,30 +20,10 @@
  * THE SOFTWARE.
  */
 
-#include "config_setup.hpp"
-#include "service_config.hpp"
-#include "service_manager.hpp"
-#include "service_process.hpp"
-#include "service_worker.hpp"
-#include "startup_info.hpp"
-#include "util.hpp"
-
-#include <cstdint>
-#include <cstdlib>
-#include <exception>
-#include <filesystem>
-#include <locale>
-#include <string_view>
-#include <utility>
+#include <cstdio>
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/cli/arg_parser.hpp>
-#include <essence/cli/option.hpp>
 #include <essence/compat.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-
-#include <spdlog/spdlog.h>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -51,6 +31,11 @@
 
 #include <Windows.h>
 #include <objbase.h>
+
+import essence.basic;
+import essence.cli;
+import refvalue.svchostify;
+import std;
 
 using namespace essence;
 using namespace essence::cli;
@@ -164,7 +149,7 @@ ES_API(SVCHOSTIFY) void WINAPI ServiceMain(DWORD argc, wchar_t** argv) {
 
     try {
         if (get_session_id() != 0) {
-            throw source_code_aware_runtime_error{U8("The program can only be running in service mode.")};
+            throw formatted_runtime_error{U8("The program can only be running in service mode.")};
         }
 
         const auto service_name = argv[0];

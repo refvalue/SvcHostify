@@ -20,8 +20,7 @@
  * THE SOFTWARE.
  */
 
-#ifndef WIN32_SVCHOST_H
-#define WIN32_SVCHOST_H
+module;
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -29,6 +28,8 @@
 
 #include <Windows.h>
 #include <rpc.h>
+
+module refvalue.svchostify:win32.svchost;
 
 typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 
@@ -70,5 +71,3 @@ typedef struct _SVCHOST_GLOBAL_DATA {
     LPNET_BIOS_RESET NetBiosReset;
     LPREGISTER_STOP_CALLBACK RegisterStopCallback;
 } SVCHOST_GLOBAL_DATA;
-
-#endif // WIN32_SVCHOST_H

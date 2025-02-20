@@ -20,32 +20,22 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+export module refvalue.svchostify:common_types;
+import std;
 
-#include "common_types.hpp"
-#include "service_config.hpp"
+export namespace essence::win {
+    enum class service_worker_type {
+        executable,
+        pure_c,
+        com,
+        jvm,
+    };
 
-#include <cstdint>
-#include <span>
-#include <string>
-#include <string_view>
-#include <vector>
+    enum class service_account_type {
+        local_system,
+        local_service,
+        network_service,
+    };
 
-#include <essence/abi/string.hpp>
-#include <essence/zstring_view.hpp>
-
-namespace essence::win {
-    [[nodiscard]] abi::string get_system_error(std::uint32_t code);
-    [[nodiscard]] abi::string get_last_error();
-    [[nodiscard]] abi::string get_system_directory();
-    [[nodiscard]] abi::string get_process_path();
-    [[nodiscard]] abi::string get_executing_path();
-    [[nodiscard]] std::string get_executing_directory();
-    [[nodiscard]] std::uint32_t get_session_id();
-    [[nodiscard]] zwstring_view get_service_account_name(service_account_type type);
-    [[nodiscard]] error_checking_handler make_service_error_checker(const service_config& config);
-    [[nodiscard]] std::vector<abi::string> parse_command_line(zwstring_view command_line);
-    [[nodiscard]] abi::wstring make_command_line(std::span<const std::string> args);
-    void allocate_console_and_redirect();
-    void add_dll_directories(std::span<const std::string> directories);
+    using error_checking_handler = std::function<void(bool success, std::string_view message)>;
 } // namespace essence::win

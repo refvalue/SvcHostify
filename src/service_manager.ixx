@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 The RefValue Project
+* Copyright (c) 2024 The RefValue Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,25 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+export module refvalue.svchostify:service_manager;
+import :service_config;
+import std;
 
-#include <cstdint>
-#include <optional>
-#include <string>
-#include <string_view>
+export namespace essence::win {
+    class service_manager {
+    public:
+        explicit service_manager(service_config config);
+        service_manager(service_manager&&) noexcept;
+        ~service_manager();
+        service_manager& operator=(service_manager&&) noexcept;
+        void install() const;
+        void uninstall() const;
+        [[nodiscard]] bool installed() const;
 
-namespace essence {
-    std::optional<std::uint64_t> parse_file_size(std::string_view size);
-    std::string truncate_file_size_string(std::uint64_t size);
+    private:
+        class impl;
+
+        std::unique_ptr<impl> impl_;
+    };
+
 } // namespace essence::win

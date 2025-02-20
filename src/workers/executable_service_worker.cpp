@@ -20,23 +20,23 @@
  * THE SOFTWARE.
  */
 
-#include "../service_worker.hpp"
-#include "../util.hpp"
-
-#include <filesystem>
-#include <string>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/managed_handle.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 
 #include <Windows.h>
+
+module refvalue.svchostify;
+import :abstract.service_worker;
+import :service_config;
+import :service_worker;
+import :util;
+import essence.basic;
+import std;
 
 namespace essence::win {
     namespace {
@@ -46,11 +46,11 @@ namespace essence::win {
         public:
             explicit executable_service_worker(service_config config) : config_{std::move(config)} {
                 if (config_.context.empty()) {
-                    throw source_code_aware_runtime_error{U8("The context must be a non-empty executable path.")};
+                    throw formatted_runtime_error{U8("The context must be a non-empty executable path.")};
                 }
 
                 if (std::error_code code; !std::filesystem::is_regular_file(to_u8string(config_.context), code)) {
-                    throw source_code_aware_runtime_error{U8("Executable Path"), config_.context, U8("Message"),
+                    throw formatted_runtime_error{U8("Executable Path"), config_.context, U8("Message"),
                         U8("The executable path must be a regular file.")};
                 }
             }
@@ -77,7 +77,7 @@ namespace essence::win {
                     wrapped_thread_.reset(pi.hThread);
                     wrapped_process_.reset(pi.hProcess);
                 } else {
-                    throw source_code_aware_runtime_error{U8("Failed to create the process.")};
+                    throw formatted_runtime_error{U8("Failed to create the process.")};
                 }
             }
 

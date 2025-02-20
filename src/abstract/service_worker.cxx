@@ -20,14 +20,9 @@
  * THE SOFTWARE.
  */
 
-#pragma once
-
-#include "../service_config.hpp"
-
-#include <concepts>
-#include <memory>
-#include <type_traits>
-#include <utility>
+module refvalue.svchostify:abstract.service_worker;
+import :service_config;
+import std;
 
 namespace essence::win::abstract {
     class service_worker {

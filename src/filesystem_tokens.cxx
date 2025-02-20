@@ -20,15 +20,24 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+module;
 
-#include "service_config.hpp"
+#include <essence/char8_t_remediation.hpp>
 
-#include <string_view>
-#include <memory>
+module refvalue.svchostify:filesystem_tokens;
+import essence.basic;
+import std;
 
 namespace essence::win {
-    void setup_config(const service_config& config, bool enable_file_logging = false);
-    service_config load_config_and_setup(std::string_view path, bool enable_file_logging = false);
-    std::shared_ptr<void> get_logger_shutdown_token();
+    struct filesystem_tokens {
+        static constexpr char generic_separator              = U8('/');
+        static constexpr char preferred_separator            = U8('\\');
+        static constexpr char command_line_separator         = U8(' ');
+        static constexpr char quotation_mark                 = U8('\"');
+        static constexpr wchar_t command_line_separator_wide = L' ';
+
+        static constexpr std::string_view escaped_quotation_mark{U8("\\\"")};
+        static constexpr std::string_view command_line_special_group{U8(" \"")};
+        static constexpr std::string_view preferred_separator_group{&preferred_separator, 1U};
+    };
 } // namespace essence::win

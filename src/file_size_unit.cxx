@@ -20,21 +20,13 @@
  * THE SOFTWARE.
  */
 
-#include "file_size_unit.hpp"
-
-#include <array>
-#include <cstddef>
-#include <functional>
-#include <ranges>
-#include <regex>
-#include <unordered_map>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/format_remediation.hpp>
-#include <essence/numeric_conversion.hpp>
-#include <essence/range.hpp>
-#include <essence/string.hpp>
+
+module refvalue.svchostify:file_size_unit;
+import essence.basic;
+import std;
 
 namespace essence {
     namespace {
@@ -55,9 +47,11 @@ namespace essence {
         }();
 
         const auto unit_size_pattern = [] {
-            auto pattern = join_with(unit_ratios | std::views::drop(1) | std::views::keys, std::string_view{U8("|")});
+            const auto pattern =
+                join_with(unit_ratios | std::views::drop(1) | std::views::keys, std::string_view{U8("|")})
+                | std::ranges::to<std::string>();
 
-            return format(U8(R"((\d+)\s*({})?)"), std::string{pattern.begin(), pattern.end()});
+            return format(U8(R"((\d+)\s*({})?)"), pattern);
         }();
     } // namespace
 
@@ -66,7 +60,7 @@ namespace essence {
             std::regex_constants::icase | std::regex_constants::ECMAScript | std::regex_constants::optimize};
 
         if (std::cmatch matches; std::regex_search(size.data(), size.data() + size.size(), matches, pattern)) {
-            if (auto iter = unit_ratio_mapping.find(matches[2].str()); iter != unit_ratio_mapping.end()) {
+            if (const auto iter = unit_ratio_mapping.find(matches[2].str()); iter != unit_ratio_mapping.end()) {
                 return *from_string<std::uint64_t>(matches[1].str()) * iter->second;
             }
         }

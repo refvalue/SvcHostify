@@ -20,29 +20,9 @@
  * THE SOFTWARE.
  */
 
-#include "service_manager.hpp"
+module;
 
-#include "common_types.hpp"
-#include "filesystem_tokens.hpp"
-#include "registry.hpp"
-#include "service_registry_keys.hpp"
-#include "util.hpp"
-
-#include <array>
-#include <filesystem>
-#include <functional>
-#include <string_view>
-#include <utility>
-
-#include <essence/abi/string.hpp>
 #include <essence/char8_t_remediation.hpp>
-#include <essence/crypto/digest.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/format_remediation.hpp>
-#include <essence/managed_handle.hpp>
-
-#include <spdlog/spdlog.h>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -50,12 +30,19 @@
 
 #include <Windows.h>
 
+module refvalue.svchostify;
+import :filesystem_tokens;
+import :registry;
+import :service_registry_keys;
+import essence.basic;
+import essence.crypto;
+import std;
+
 using namespace essence::crypto;
 
 namespace essence::win {
     namespace {
-        using sc_handle = unique_handle<&CloseServiceHandle>;
-
+        using sc_handle                = unique_handle<&CloseServiceHandle>;
         const auto system_directory    = std::filesystem::path{to_u8string(get_system_directory())};
         const auto svchost_executable  = from_u8string((system_directory / u8"svchost.exe").generic_u8string());
         const auto rundll32_executable = from_u8string((system_directory / u8"rundll32.exe").generic_u8string());

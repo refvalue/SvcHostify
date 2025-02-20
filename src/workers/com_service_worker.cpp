@@ -20,26 +20,24 @@
  * THE SOFTWARE.
  */
 
-#include "../service_worker.hpp"
-#include "../win32/ISvcHostify.hpp"
-
-#include <algorithm>
-#include <memory>
-#include <ranges>
-#include <span>
-#include <string>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/scope.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 #include <Windows.h>
+#include <comdef.h>
 #include <comutil.h>
+
+module refvalue.svchostify;
+import :abstract.service_worker;
+import :service_config;
+import :service_worker;
+import :win32.ISvcHostify;
+import essence.basic;
+import std;
 
 namespace essence::win {
     namespace {
@@ -51,7 +49,7 @@ namespace essence::win {
             try {
                 _com_util::CheckError(hr);
             } catch (const _com_error& ex) {
-                throw source_code_aware_runtime_error{
+                throw formatted_runtime_error{
                     std::forward<Args>(args)..., U8("Internal"), to_utf8_string(ex.ErrorMessage())};
             }
         }
@@ -85,7 +83,7 @@ namespace essence::win {
         public:
             explicit com_service_worker(service_config config) : config_{std::move(config)} {
                 if (config_.context.empty()) {
-                    throw source_code_aware_runtime_error{
+                    throw formatted_runtime_error{
                         U8("The context must be a non-empty CLSID of your ISvcHostify implementation coclass.")};
                 }
 

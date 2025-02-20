@@ -20,34 +20,21 @@
  * THE SOFTWARE.
  */
 
-#include "service_process.hpp"
+module;
 
-#include "config_setup.hpp"
-#include "win32/svchost.h"
-
-#include <array>
-#include <exception>
-#include <filesystem>
-#include <future>
-#include <optional>
-#include <thread>
-#include <utility>
-
-#include <essence/abi/string.hpp>
 #include <essence/char8_t_remediation.hpp>
-#include <essence/encoding.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/exception.hpp>
-
-#include <spdlog/spdlog.h>
+#include <essence/compat.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #define NOGDI
 
-#include "util.hpp"
-
 #include <Windows.h>
+
+module refvalue.svchostify;
+import :config_setup;
+import :win32.svchost;
+import std;
 
 namespace essence::win {
     namespace {
@@ -127,8 +114,7 @@ namespace essence::win {
 
             promise.get_future().get();
         } catch (const std::exception&) {
-            aggregate_error::throw_nested(
-                source_code_aware_runtime_error{U8("An error occurred during the service running.")});
+            aggregate_error::throw_nested(formatted_runtime_error{U8("An error occurred during the service running.")});
         }
 
         void start() {
@@ -140,7 +126,7 @@ namespace essence::win {
             try {
                 worker_->on_start();
             } catch (const std::exception&) {
-                aggregate_error::throw_nested(source_code_aware_runtime_error{U8("Failed to start the service.")});
+                aggregate_error::throw_nested(formatted_runtime_error{U8("Failed to start the service.")});
             }
 
             report_status(SERVICE_RUNNING);

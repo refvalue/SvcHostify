@@ -20,25 +20,15 @@
  * THE SOFTWARE.
  */
 
-#include "file_size_unit.hpp"
-#include "util.hpp"
-
-#include <algorithm>
-#include <atomic>
-#include <exception>
-#include <filesystem>
-#include <functional>
-#include <utility>
+module;
 
 #include <essence/char8_t_remediation.hpp>
-#include <essence/error_extensions.hpp>
-#include <essence/io/fs_operator.hpp>
-#include <essence/io/stdio_watcher.hpp>
-#include <essence/json_compat.hpp>
 
-#include <spdlog/sinks/rotating_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
+module refvalue.svchostify;
+import :file_size_unit;
+import essence.basic;
+import essence.io;
+import essence.serialization;
 
 using namespace essence::io;
 
@@ -91,7 +81,7 @@ namespace essence::win {
             const auto logger_config = config.logger.value_or(service_config::defaults().logger.to_config());
 
             if (logger_config.base_path.empty()) {
-                throw source_code_aware_runtime_error{U8("The logger base path must be non-empty.")};
+                throw formatted_runtime_error{U8("The logger base path must be non-empty.")};
             }
 
             // Creates the logging directory if the base path contains a parent path.
@@ -100,7 +90,7 @@ namespace essence::win {
                 const auto logging_directory = base_path.parent_path();
 
                 if (std::error_code code; !std::filesystem::create_directories(logging_directory, code) && code) {
-                    throw source_code_aware_runtime_error{U8("Logging Directory"),
+                    throw formatted_runtime_error{U8("Logging Directory"),
                         from_u8string(logging_directory.generic_u8string()), U8("Message"),
                         U8("Failed to create the logging directory."), U8("Internal"), code.message()};
                 }
@@ -110,12 +100,12 @@ namespace essence::win {
                 parse_file_size(logger_config.max_size.value_or(service_config::defaults().logger.max_size));
 
             if (!max_size) {
-                throw source_code_aware_runtime_error{
+                throw formatted_runtime_error{
                     U8("Max Size"), *logger_config.max_size, U8("Message"), U8("Invalid max file size of the logger.")};
             }
 
             if (auto&& [min, max] = valid_file_size_range; *max_size < min || *max_size > max) {
-                throw source_code_aware_runtime_error{U8("Max Size"), *logger_config.max_size, U8("Lower Bound"),
+                throw formatted_runtime_error{U8("Max Size"), *logger_config.max_size, U8("Lower Bound"),
                     truncate_file_size_string(min), U8("Upper Bound"), truncate_file_size_string(max), U8("Message"),
                     U8("The max file size was out of range.")};
             }
@@ -123,7 +113,7 @@ namespace essence::win {
             const auto max_files = logger_config.max_files.value_or(service_config::defaults().logger.max_files);
 
             if (auto&& [min, max] = valid_file_count_range; max_files < min || max_files > max) {
-                throw source_code_aware_runtime_error{U8("Max Files"), *logger_config.max_files, U8("Lower Bound"), min,
+                throw formatted_runtime_error{U8("Max Files"), *logger_config.max_files, U8("Lower Bound"), min,
                     U8("Upper Bound"), max, U8("Message"), U8("The max file count was out of range.")};
             }
 
@@ -163,13 +153,13 @@ namespace essence::win {
         }
     } // namespace
 
-    void setup_config(const service_config& config, bool enable_file_logging = false) {
+    void setup_config(const service_config& config, bool enable_file_logging) {
         const auto working_directory = config.working_directory.value_or(service_config::defaults().working_directory);
 
         spdlog::info(U8("Working directory: {}"), working_directory);
 
         if (std::error_code code; (std::filesystem::current_path(to_u8string(working_directory), code), code)) {
-            throw source_code_aware_runtime_error{U8("Working Directory"), working_directory, U8("Message"),
+            throw formatted_runtime_error{U8("Working Directory"), working_directory, U8("Message"),
                 U8("Failed to set the working directory."), U8("Internal"), code.message()};
         }
 
@@ -187,7 +177,7 @@ namespace essence::win {
             try {
                 return json::parse(*io::get_native_fs_operator().open_read(path)).get<service_config>();
             } catch (const std::exception& ex) {
-                throw source_code_aware_runtime_error{
+                throw formatted_runtime_error{
                     U8("Message"), U8("Failed to parse the configuration file."), U8("Internal"), ex.what()};
             }
         }();

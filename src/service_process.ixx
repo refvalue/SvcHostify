@@ -20,19 +20,30 @@
  * THE SOFTWARE.
  */
 
-#pragma once
+export module refvalue.svchostify:service_process;
+import :abstract.service_worker;
+import essence.basic;
+import std;
 
-#include "abstract/service_worker.hpp"
-#include "service_config.hpp"
+export namespace essence::win {
+    class service_process {
+    public:
+        service_process(const service_process&)     = delete;
+        service_process(service_process&&) noexcept = delete;
+        ~service_process();
+        service_process& operator=(const service_process&)     = delete;
+        service_process& operator=(service_process&&) noexcept = delete;
+        static const service_process& instance();
+        void init(zwstring_view service_name) const;
+        void run(abstract::service_worker worker) const;
+        void report_stopped() const;
+        void set_global_data(const void* data) const noexcept;
 
-#include <essence/zstring_view.hpp>
+    private:
+        service_process();
 
-namespace essence::win {
-    abstract::service_worker make_executable_service_worker(service_config config);
-    abstract::service_worker make_pure_c_service_worker(service_config config);
-    abstract::service_worker make_com_service_worker(service_config config);
-    abstract::service_worker make_jvm_service_worker(service_config config);
+        class impl;
 
-    abstract::service_worker make_service_worker(service_config config);
-    abstract::service_worker make_service_worker_from_registry(zwstring_view service_name);
+        std::unique_ptr<impl> impl_;
+    };
 } // namespace essence::win
